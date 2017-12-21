@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jms="http://www.springframework.org/schema/jms" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans   
+     http://www.springframework.org/schema/beans/spring-beans-3.0.xsd   
+     http://www.springframework.org/schema/context   
+     http://www.springframework.org/schema/context/spring-context-3.0.xsd   
+    http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd   
+    http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms-3.0.xsd
+    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+	<!-- 加载配置文件
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath*:/config.properties</value>
+			</list>
+		</property>
+		<property name="ignoreUnresolvablePlaceholders" value="true" />
+	</bean> -->
+	<!-- 启动socket服务类 -->
+	<bean id="startServer" class="com.spdb.ib.dpib.netty.spring.start.server.StartServer"
+		init-method="startSpringServer" lazy-init="false">
+		<property name="taskExecutor" ref="serverTaskExecutor"></property>
+		<property name="springServer" ref="springServer"></property>
+		<property name="port"  value="8888"></property>
+	</bean>
+	<!-- 服务端责任链 -->
+	<bean id="serverPipelineFactory"
+		class="com.spdb.ib.dpib.netty.spring.server.SpringServerPipelineFactory"
+		scope="prototype">
+		<property name="serverHandler" ref="serverHandler"></property>
+		<!-- 超时时间 单位：秒 -->
+		<property name="hashedWheelTime" value="10"></property>
+	</bean>
+	<!-- 服务端处理接受数据，发送数据handler类，生命周期类 -->
+	<bean id="serverHandler"
+		class="com.spdb.ib.dpib.netty.spring.server.SpringServerHandler">
+		<property name="messageManager" ref="messageManager"></property>
+		<property name="taskCategoryBean" ref="categoryBean"></property>
+	</bean>
+	<!-- server启动主线程类 -->
+	<bean id="springServer" class="com.spdb.ib.dpib.netty.spring.server.SpringNettyServer">
+		<property name="serverPipelineFactory" ref="serverPipelineFactory"></property>
+		<!-- <property name="port"  value="${socket.server.port}"> </property>-->
+	</bean>
+	<bean name="springContextUtil" class="com.spdb.ib.dpib.common.SpringContextUtil" scope="singleton" lazy-init="false"></bean>
+   <!-- 消息队列处理类 -->
+	<bean id="messageManager" class="com.spdb.ib.dpib.netty.message.MessageManager"
+		init-method="start">
+		<property name="taskExecutor" ref="serverTaskExecutor"></property>
+	</bean>
+	<!-- socket监听线程池 提高效率-->
+	<bean id="serverTaskExecutor"
+		class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+		<property name="corePoolSize" value="50" />
+		<property name="maxPoolSize" value="200" />
+		<property name="queueCapacity" value="1000" />
+		<property name="keepAliveSeconds" value="300" />
+		<property name="rejectedExecutionHandler">
+			<bean class="java.util.concurrent.ThreadPoolExecutor$CallerRunsPolicy" />
+		</property>
+	</bean>
+	
+</beans>

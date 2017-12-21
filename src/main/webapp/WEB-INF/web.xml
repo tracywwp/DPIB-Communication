@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.5" 
+	xmlns="http://java.sun.com/xml/ns/javaee" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee 
+	http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+  <display-name></display-name>	
+  
+    <!-- 我们的示例是需要通过 Servlet 容器进行服务暴露，
+                        因此需要配置相对应的 web.xml 文件，
+                        首先是增加 Spring 的配置文件加载 Listener -->
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>classpath*:applicationCxf-messageparsing.xml</param-value>
+    </context-param>
+    <!-- Spring ContextLoaderListener -->
+    <listener>
+        <listener-class>
+            org.springframework.web.context.ContextLoaderListener
+        </listener-class>
+    </listener>
+    <!-- 处理内存泄露 -->
+   <listener>
+     <listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
+   </listener>
+    <!-- CXF Servlet 的定义，以及它的映射 -->
+    <servlet>
+        <servlet-name>CXFServlet</servlet-name>
+        <servlet-class>
+            org.apache.cxf.transport.servlet.CXFServlet
+        </servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <!-- CXFServlet Mapping -->
+    <servlet-mapping>
+        <servlet-name>CXFServlet</servlet-name>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
+  
+  <welcome-file-list>
+    <welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
+</web-app>
+
